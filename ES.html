@@ -5,8 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MicroLab — Simulador de Decisiones Económicas</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+function toggleGlossary(el){
+  el.classList.toggle('open');
+  const body=el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+function toggleGlossary(el){
+  el.classList.toggle('open');
+  const body=el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -230,6 +244,35 @@ button:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
   .site-header{padding:0 1rem}
   .container{padding:1.5rem 1rem}
 }
+
+/* Glossary accordion in rounds */
+.glossary-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;padding:.55rem .85rem;
+  background:var(--b50);border:1px solid var(--b200);
+  border-radius:var(--radius);margin-bottom:.6rem;
+  font-size:.78rem;font-weight:500;color:var(--b600);
+  font-family:var(--ff-mono);user-select:none;transition:background .15s;
+}
+.glossary-toggle:hover{background:var(--b100);border-color:var(--b300)}
+.glossary-toggle .gt-arrow{
+  font-size:.65rem;transition:transform .25s;display:inline-block;
+}
+.glossary-toggle.open .gt-arrow{transform:rotate(180deg)}
+.glossary-body{
+  display:none;
+  grid-template-columns:repeat(auto-fit,minmax(175px,1fr));
+  gap:6px;margin-bottom:.75rem;
+}
+.glossary-body.open{display:grid}
+.gterm{
+  background:var(--b50);border:1px solid var(--b200);
+  border-radius:var(--radius);padding:.4rem .7rem;
+  font-size:.75rem;font-family:var(--ff-mono);color:var(--b800);
+  display:flex;gap:6px;align-items:baseline;
+}
+.gterm strong{color:var(--b600);font-weight:600;flex-shrink:0}
+
 </style>
 </head>
 <body>
@@ -292,6 +335,25 @@ button:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
       <span style="color:var(--b300);font-size:.75rem">▶ Todos los costos y precios se expresan en USD &nbsp;·&nbsp; q representa lotes de 100 unidades de pan</span>
     </div>
     <p style="margin-top:.85rem;font-size:.85rem;color:var(--b500)">En cada ronda completarán la tabla de costos a mano. Al verificar todas las celdas, el sistema mostrará automáticamente el gráfico con CMg, CTMe y el punto de equilibrio marcado.</p>
+  </div>
+
+
+  <div class="card" style="margin-top:.5rem">
+    <h3>Glosario de siglas</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:.5rem">
+      <div class="case-concept" style="margin:0"><strong>CT</strong> — Costo Total</div>
+      <div class="case-concept" style="margin:0"><strong>CV</strong> — Costo Variable</div>
+      <div class="case-concept" style="margin:0"><strong>CF</strong> — Costo Fijo</div>
+      <div class="case-concept" style="margin:0"><strong>CMg</strong> — Costo Marginal</div>
+      <div class="case-concept" style="margin:0"><strong>CVMe</strong> — Costo Variable Medio</div>
+      <div class="case-concept" style="margin:0"><strong>CTMe</strong> — Costo Total Medio</div>
+      <div class="case-concept" style="margin:0"><strong>P</strong> — Precio de mercado</div>
+      <div class="case-concept" style="margin:0"><strong>q*</strong> — Cantidad óptima</div>
+      <div class="case-concept" style="margin:0"><strong>a, b</strong> — Parámetros de la función de costos</div>
+      <div class="case-concept" style="margin:0"><strong>m</strong> — Multiplicador de costos variables</div>
+      <div class="case-concept" style="margin:0"><strong>LP</strong> — Largo Plazo</div>
+      <div class="case-concept" style="margin:0"><strong>CP</strong> — Corto Plazo</div>
+    </div>
   </div>
 
   <div class="btn-row">
@@ -361,7 +423,9 @@ const COMPANIES = [
   {id:7,  name:"Pan de Casa",       icon:"🏠", cf:50000,  a:8500,  b:850},
   {id:8,  name:"La Panadería",      icon:"🥖", cf:63000,  a:11500, b:1150},
   {id:9,  name:"Artesanos del Pan", icon:"👨‍🍳", cf:61000,  a:10500, b:1050},
-  {id:10, name:"Crisol Horneado",   icon:"✨", cf:75000,  a:14000, b:1500}
+  {id:10, name:"Crisol Horneado",   icon:"✨", cf:75000,  a:14000, b:1500},
+  {id:11, name:"La Artesa",      icon:"🫶", cf:59000,  a:9800,  b:980},
+  {id:12, name:"Trigo Dorado",   icon:"🌻", cf:68000,  a:12500, b:1300}
 ];
 
 /* ── ESCALA DE PRESENTACIÓN ──
@@ -506,9 +570,11 @@ function selectCompany(co,el){
     '<div class="metric"><div class="metric-label">Parámetro b (USD)</div><div class="metric-value">'+usdFmt(co.b)+'</div></div>'+
     '<div class="metric"><div class="metric-label">CVMe mínimo</div><div class="metric-value accent">'+usd(co.a)+' USD / lote</div></div>';
   document.getElementById('params-formula').innerHTML=
-    '<div class="ft">Fórmulas de tu empresa</div>'+
-    'CT = '+co.cf.toLocaleString()+' + '+co.a+'q + '+co.b+'q\u00b2'+
-    '';
+    '<div class="ft">Fórmulas de costo de tu empresa (USD)</div>'+
+    'CT(q) = '+usdFmt(co.cf)+' + '+usdFmt(co.a)+'\u00b7q + '+usdFmt(co.b)+'\u00b7q\u00b2<br>'+
+    'CMg(q) = '+usdFmt(co.a)+' + '+(usdFmt(co.b*2))+'\u00b7q &nbsp;\u00b7&nbsp; '+
+    'CVMe(q) = '+usdFmt(co.a)+' + '+usdFmt(co.b)+'\u00b7q &nbsp;\u00b7&nbsp; '+
+    'q en lotes de 100 unidades';
   document.getElementById('params-panel').classList.add('show');
 }
 
@@ -619,7 +685,8 @@ function renderRound(){
       '</div>'+
     '</div>'+
     '<div class="card">'+
-      '<h3>Tabla de costos \u2014 Completa CMg, CVMe y CTMe</h3>'+
+      '<div class="glossary-toggle" onclick="toggleGlossary(this)">'+'<span>📖 Glosario de siglas</span><span class="gt-arrow">▼</span>'+'</div>'+'<div class="glossary-body">'+'<div class="gterm"><strong>CT</strong> Costo Total</div>'+'<div class="gterm"><strong>CV</strong> Costo Variable</div>'+'<div class="gterm"><strong>CF</strong> Costo Fijo</div>'+'<div class="gterm"><strong>CMg</strong> Costo Marginal</div>'+'<div class="gterm"><strong>CVMe</strong> Costo Variable Medio</div>'+'<div class="gterm"><strong>CTMe</strong> Costo Total Medio</div>'+'<div class="gterm"><strong>P</strong> Precio de mercado</div>'+'<div class="gterm"><strong>q*</strong> Cantidad óptima</div>'+'<div class="gterm"><strong>a, b</strong> Parámetros de costo</div>'+'<div class="gterm"><strong>m</strong> Multiplicador CV</div>'+'<div class="gterm"><strong>LP</strong> Largo Plazo</div>'+'<div class="gterm"><strong>CP</strong> Corto Plazo</div>'+'</div>'+
+    '<h3>Tabla de costos \u2014 Completa CMg, CVMe y CTMe</h3>'+
       '<p style="font-size:.81rem;color:var(--b500);margin-bottom:.6rem">'+
         'CT y CV están en USD (÷1.000). q = lotes de 100 unidades. Ingresa CMg, CVMe y CTMe <strong>en USD</strong> usando las fórmulas. Tolerancia: ±$1 USD. '+
         'Progreso: <strong id="cc">0</strong> / '+totalCells+' celdas correctas.'+
@@ -994,6 +1061,13 @@ function resetGame(){
   ).join('');
   show('screen-intro');
 }
+
+function toggleGlossary(el){
+  el.classList.toggle('open');
+  const body=el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
 </script>
 </body>
 </html>
