@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MicroLab — Economics Decision Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+function toggleGlossary(el){
+  el.classList.toggle('open');
+  const body=el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+function toggleGlossary(el){
+  el.classList.toggle('open');
+  const body=el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --b900:#071525;--b800:#0D2144;--b700:#0F3460;--b600:#1565A8;
+  --b500:#1E88E5;--b400:#42A5F5;--b300:#90CAF9;--b200:#BBDEFB;
+  --b100:#E3F2FD;--b50:#F0F8FF;
+  --gold:#E8A000;--gold-lt:#FFF8E1;
+  --green:#1B5E20;--green-lt:#E8F5E9;--green-mid:#2E7D32;
+  --red:#B71C1C;--red-lt:#FFEBEE;--red-mid:#C62828;
+  --white:#FFFFFF;
+  --ff-ui:'Inter',sans-serif;
+  --ff-display:'Playfair Display',Georgia,serif;
+  --ff-mono:'JetBrains Mono',monospace;
+  --radius:8px;--radius-lg:14px;
+  --shadow:0 2px 12px rgba(13,33,68,.10);
+  --shadow-md:0 4px 24px rgba(13,33,68,.16);
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{background:var(--b50);color:var(--b900);font-family:var(--ff-ui);min-height:100vh;padding-bottom:5rem}
+
+/* Header */
+.site-header{background:linear-gradient(135deg,var(--b800) 0%,var(--b700) 100%);color:var(--white);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:62px;border-bottom:3px solid var(--b500);position:sticky;top:0;z-index:200}
+.site-header h1{font-family:var(--ff-display);font-size:1.35rem;font-weight:600;letter-spacing:.01em}
+.site-header h1 span{color:var(--b400)}
+.site-header .tagline{font-size:.67rem;color:var(--b300);font-family:var(--ff-mono);margin-top:3px}
+.header-author{text-align:right}
+.header-author .course{font-size:.7rem;color:var(--b300);font-family:var(--ff-mono)}
+.header-author .author{font-size:.68rem;color:var(--b400);font-family:var(--ff-mono);margin-top:2px}
+
+/* Layout */
+.container{max-width:920px;margin:0 auto;padding:2.5rem 1.5rem}
+.screen{display:none}.screen.active{display:block}
+
+/* Progress */
+.progress-wrap{display:flex;gap:5px;margin-bottom:2rem}
+.ps{flex:1;height:5px;border-radius:3px;background:var(--b200);transition:background .4s}
+.ps.done{background:var(--b400)}.ps.active{background:var(--b700)}
+
+/* Section label */
+.section-lbl{font-family:var(--ff-mono);font-size:.66rem;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--b500);margin-bottom:.5rem;display:flex;align-items:center;gap:6px}
+.section-lbl::after{content:'';flex:1;height:1px;background:var(--b200)}
+
+/* Cards */
+.card{background:var(--white);border:1px solid var(--b200);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.25rem;box-shadow:var(--shadow)}
+.card-blue{border-left:4px solid var(--b500)}
+.card-gold{border-left:4px solid var(--gold);background:#FFFDF7}
+
+/* Typography */
+h2{font-family:var(--ff-display);font-size:1.75rem;font-weight:600;color:var(--b800);margin-bottom:.35rem}
+h3{font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--b600);margin-bottom:.75rem}
+p{font-size:.93rem;line-height:1.72;color:var(--b800)}
+.muted{color:var(--b500)}
+
+/* Intro hero */
+.intro-hero{background:linear-gradient(135deg,var(--b800) 0%,var(--b600) 100%);border-radius:var(--radius-lg);padding:2.5rem 2rem;margin-bottom:2rem;color:var(--white);position:relative;overflow:hidden}
+.intro-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none}
+.intro-hero h2{color:var(--white);font-size:2rem;margin-bottom:.5rem}
+.intro-hero p{color:var(--b200);font-size:.95rem;max-width:580px}
+
+/* Cases grid */
+.cases-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:1.5rem 0}
+.case-card{background:var(--white);border:1px solid var(--b200);border-radius:var(--radius-lg);padding:1.25rem;transition:box-shadow .2s,border-color .2s;box-shadow:var(--shadow)}
+.case-card:hover{border-color:var(--b400);box-shadow:var(--shadow-md)}
+.case-num{width:32px;height:32px;border-radius:50%;background:var(--b700);color:var(--white);display:flex;align-items:center;justify-content:center;font-family:var(--ff-mono);font-size:.85rem;font-weight:500;margin-bottom:.75rem}
+.case-title{font-weight:600;font-size:.92rem;color:var(--b800);margin-bottom:.4rem}
+.case-desc{font-size:.82rem;color:var(--b500);line-height:1.6}
+.case-concept{margin-top:.75rem;padding:.5rem .75rem;background:var(--b50);border-left:3px solid var(--b400);border-radius:0 var(--radius) var(--radius) 0;font-family:var(--ff-mono);font-size:.73rem;color:var(--b700)}
+
+/* Formula preview */
+.formula-preview{background:var(--b800);border-radius:var(--radius);padding:1.1rem 1.5rem;font-family:var(--ff-mono);font-size:.83rem;color:var(--b200);line-height:2;margin-top:1.25rem}
+.formula-preview .ft{color:var(--b400);font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+
+/* Instructions box */
+.instructions-box{background:var(--white);border:2px solid var(--b500);border-radius:var(--radius-lg);padding:0;margin-bottom:1.75rem;box-shadow:var(--shadow-md);overflow:hidden}
+.instructions-header{background:linear-gradient(135deg,var(--b700) 0%,var(--b600) 100%);padding:1rem 1.5rem;display:flex;align-items:center;gap:12px}
+.instructions-header-icon{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.instructions-header h3{color:var(--white);font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin:0}
+.instructions-body{padding:1.25rem 1.5rem}
+.instr-steps{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.6rem}
+.instr-step{display:flex;align-items:flex-start;gap:12px;padding:.65rem .9rem;border-radius:var(--radius);background:var(--b50);border:1px solid var(--b200)}
+.instr-step-num{min-width:24px;height:24px;border-radius:50%;background:var(--b600);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:600;font-family:var(--ff-mono);flex-shrink:0;margin-top:1px}
+.instr-step-text{font-size:.87rem;color:var(--b800);line-height:1.55}
+.instr-step-text strong{color:var(--b700);font-weight:600}
+.instr-note{margin-top:1rem;padding:.75rem 1rem;background:var(--gold-lt);border:1px solid #F5C842;border-radius:var(--radius);font-size:.82rem;color:#7A5200;display:flex;align-items:flex-start;gap:8px}
+.instr-note-icon{font-size:1rem;flex-shrink:0;margin-top:1px}
+
+/* Company selection */
+.company-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin:1.25rem 0}
+.co-card{border:1.5px solid var(--b200);border-radius:var(--radius-lg);padding:1rem;cursor:pointer;transition:all .2s;background:var(--white);text-align:center}
+.co-card:hover{border-color:var(--b400);background:var(--b50);box-shadow:var(--shadow)}
+.co-card.selected{border-color:var(--b600);background:var(--b700);box-shadow:var(--shadow-md)}
+.co-card.selected .co-name{color:var(--white)}
+.co-icon{font-size:1.8rem;margin-bottom:6px}
+.co-name{font-family:var(--ff-display);font-size:.95rem;color:var(--b800);font-weight:600}
+
+/* Params panel */
+.params-panel{display:none;background:var(--b50);border:1px solid var(--b200);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-top:1rem}
+.params-panel.show{display:block}
+
+/* Member inputs */
+.names-wrap{margin-top:1rem}
+.names-wrap label{font-size:.84rem;color:var(--b600);display:block;margin-bottom:6px;font-weight:500}
+.member-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.member-num{min-width:28px;height:28px;border-radius:50%;background:var(--b600);color:var(--white);display:flex;align-items:center;justify-content:center;font-family:var(--ff-mono);font-size:.75rem;font-weight:600;flex-shrink:0}
+.member-input{flex:1;padding:9px 14px;border:1.5px solid var(--b300);border-radius:var(--radius);background:var(--white);font-family:var(--ff-ui);font-size:.88rem;color:var(--b800)}
+.member-input:focus{outline:none;border-color:var(--b500);background:var(--b50)}
+
+/* Metrics */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:1rem 0}
+.metric{background:var(--b50);border:1px solid var(--b200);border-radius:var(--radius);padding:.7rem .9rem}
+.metric-label{font-size:.66rem;color:var(--b500);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;font-family:var(--ff-mono)}
+.metric-value{font-family:var(--ff-mono);font-size:.98rem;font-weight:500;color:var(--b800)}
+.metric-value.accent{color:var(--b500)}
+
+/* Formula box */
+.formula-box{background:var(--b800);border-radius:var(--radius);padding:.75rem 1.1rem;margin:.75rem 0;font-family:var(--ff-mono);font-size:.8rem;color:var(--b200);line-height:2}
+.formula-box .ft{color:var(--b400);font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+
+/* Round header */
+.round-header{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem}
+.round-badge{min-width:52px;height:52px;background:var(--b700);color:var(--b200);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--ff-mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
+.round-badge span{font-size:1.5rem;font-weight:500;color:var(--white);line-height:1}
+
+/* Narrative */
+.narrative{font-family:var(--ff-display);font-size:1.02rem;font-style:italic;line-height:1.78;color:var(--b700);border-left:3px solid var(--b400);padding:.85rem 1.25rem;background:var(--b100);border-radius:0 var(--radius) var(--radius) 0;margin-bottom:1.25rem}
+
+/* Event box */
+.event-box{background:#EFF6FF;border:1px solid var(--b300);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem}
+.event-label{font-family:var(--ff-mono);font-size:.68rem;font-weight:500;color:var(--b500);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+.event-box p{color:var(--b700);font-size:.88rem}
+
+/* Cost table */
+.cost-table-wrap{overflow-x:auto;margin:.75rem 0}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead th{text-align:right;padding:8px 10px;background:var(--b700);color:var(--b100);font-family:var(--ff-mono);font-size:.68rem;font-weight:500;letter-spacing:.05em;white-space:nowrap}
+thead th:first-child{text-align:center;border-radius:var(--radius) 0 0 0}
+thead th:last-child{border-radius:0 var(--radius) 0 0}
+tbody tr:nth-child(even){background:#F8FBFF}
+tbody tr:hover{background:var(--b50)}
+tbody td{padding:6px 10px;text-align:right;font-family:var(--ff-mono);color:var(--b800);border-bottom:1px solid var(--b100)}
+tbody td:first-child{text-align:center;font-weight:500;color:var(--b600)}
+td.given{color:var(--b700)}
+td.si{padding:3px 5px}
+td.si input{width:88px;padding:5px 7px;text-align:right;border:1.5px solid var(--b300);border-radius:5px;font-family:var(--ff-mono);font-size:.78rem;color:var(--b800);background:var(--white);transition:border-color .15s}
+td.si input:focus{outline:none;border-color:var(--b500);background:#EFF6FF}
+td.si input.ok{border-color:var(--green-mid);background:var(--green-lt);color:var(--green)}
+td.si input.err{border-color:var(--red-mid);background:var(--red-lt)}
+.eq-row td{background:#E8F4FD!important;font-weight:500}
+
+/* Chart */
+.chart-wrap{display:none;margin-top:1.25rem;background:var(--white);border:1px solid var(--b200);border-radius:var(--radius-lg);padding:1.25rem;box-shadow:var(--shadow)}
+.chart-wrap.show{display:block}
+.chart-canvas-wrap{position:relative;height:300px}
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:.75rem;font-size:.75rem;font-family:var(--ff-mono);color:var(--b600)}
+.leg-dot{display:inline-block;width:12px;height:3px;vertical-align:middle;margin-right:4px}
+.leg-circle{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--b500);vertical-align:middle;margin-right:4px}
+
+/* Equilibrium highlight */
+.eq-highlight{background:linear-gradient(90deg,var(--b100),var(--b50));border:1px solid var(--b300);border-radius:var(--radius);padding:.75rem 1rem;margin-top:.75rem;font-size:.85rem;display:none;align-items:center;gap:10px;color:var(--b700)}
+.eq-highlight.show{display:flex}
+.eq-dot-sm{width:12px;height:12px;border-radius:50%;background:var(--b500);flex-shrink:0}
+
+/* Decision */
+.decision-area{display:flex;align-items:center;gap:12px;margin:1rem 0;flex-wrap:wrap}
+.decision-area label{font-size:.9rem;color:var(--b800);flex-shrink:0}
+.decision-area input[type=number]{width:120px;padding:10px 14px;border:1.5px solid var(--b300);border-radius:var(--radius);background:var(--white);font-family:var(--ff-mono);font-size:1rem;color:var(--b800);text-align:center}
+.decision-area input:focus{outline:none;border-color:var(--b500)}
+
+/* Conclusion */
+.conclusion-wrap{margin-top:1rem}
+.conclusion-wrap label{font-size:.84rem;color:var(--b600);display:block;margin-bottom:6px;font-weight:500}
+.conclusion-wrap textarea{width:100%;min-height:90px;padding:10px 14px;resize:vertical;border:1.5px solid var(--b300);border-radius:var(--radius);font-family:var(--ff-ui);font-size:.88rem;color:var(--b800);line-height:1.65;background:var(--white)}
+.conclusion-wrap textarea:focus{outline:none;border-color:var(--b500);background:#EFF6FF}
+.conclusion-wrap .char-hint{font-size:.72rem;color:var(--b400);font-family:var(--ff-mono);margin-top:4px}
+
+/* Feedback */
+.feedback{border-radius:var(--radius);padding:.85rem 1.1rem;font-size:.87rem;line-height:1.65;display:none;margin-top:.75rem}
+.feedback.show{display:block}
+.feedback.error{background:var(--red-lt);color:var(--red);border:1px solid #FFCDD2}
+.feedback.success{background:var(--green-lt);color:var(--green);border:1px solid #C8E6C9}
+.feedback.motivate{background:#EFF6FF;color:var(--b700);border:1px solid var(--b300)}
+.feedback strong{font-weight:600;display:block;margin-bottom:3px}
+
+/* Buttons */
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem}
+button{cursor:pointer;font-family:var(--ff-ui);font-size:.88rem;font-weight:500;padding:10px 20px;border-radius:var(--radius);border:1.5px solid var(--b600);background:var(--b600);color:var(--white);transition:background .15s,transform .1s}
+button:hover{background:var(--b700);border-color:var(--b700)}
+button:active{transform:scale(.97)}
+button.outline{background:transparent;color:var(--b600);border-color:var(--b300)}
+button.outline:hover{background:var(--b100);border-color:var(--b500);color:var(--b700)}
+button.accent{background:var(--b500);border-color:var(--b500)}
+button.accent:hover{background:var(--b600);border-color:var(--b600)}
+button.gold-btn{background:var(--gold);border-color:var(--gold);color:var(--b900)}
+button.gold-btn:hover{background:#D4940A;border-color:#D4940A}
+button:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+
+/* Results */
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--b100);font-size:.9rem}
+.result-row:last-child{border-bottom:none}
+.result-row .rl{color:var(--b500);font-size:.82rem}
+.result-row .rv{font-family:var(--ff-mono);font-weight:500;color:var(--b800)}
+.rv.pos{color:var(--green-mid)}.rv.neg{color:var(--red-mid)}
+.pill{font-family:var(--ff-mono);font-size:.71rem;font-weight:500;padding:3px 10px;border-radius:20px}
+.pill-green{background:var(--green-lt);color:var(--green)}
+.pill-red{background:var(--red-lt);color:var(--red)}
+.pill-blue{background:var(--b100);color:var(--b700)}
+.round-summary-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
+.conclusion-display{margin-top:.75rem;padding:.75rem 1rem;background:var(--b50);border-left:3px solid var(--b400);border-radius:0 var(--radius) var(--radius) 0;font-size:.85rem;font-style:italic;color:var(--b700);line-height:1.65}
+
+
+.co-card.locked{pointer-events:none;opacity:.45;cursor:not-allowed}
+.co-card.locked-selected{pointer-events:none;border-color:var(--b600);background:var(--b700);box-shadow:var(--shadow-md);cursor:not-allowed}
+.co-card.locked-selected .co-name{color:var(--white)}
+.lock-notice{display:none;font-size:.8rem;color:var(--b600);font-family:var(--ff-mono);margin-top:.6rem;padding:.5rem .75rem;background:var(--b100);border-radius:var(--radius);border:1px solid var(--b300)}
+.lock-notice.show{display:block}
+
+@media(max-width:600px){
+  .company-grid{grid-template-columns:repeat(3,1fr)}
+  .metrics{grid-template-columns:1fr 1fr}
+  .cases-grid{grid-template-columns:1fr 1fr}
+  .site-header{padding:0 1rem}
+  .container{padding:1.5rem 1rem}
+}
+
+/* Glossary accordion in rounds */
+.glossary-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;padding:.55rem .85rem;
+  background:var(--b50);border:1px solid var(--b200);
+  border-radius:var(--radius);margin-bottom:.6rem;
+  font-size:.78rem;font-weight:500;color:var(--b600);
+  font-family:var(--ff-mono);user-select:none;transition:background .15s;
+}
+.glossary-toggle:hover{background:var(--b100);border-color:var(--b300)}
+.glossary-toggle .gt-arrow{
+  font-size:.65rem;transition:transform .25s;display:inline-block;
+}
+.glossary-toggle.open .gt-arrow{transform:rotate(180deg)}
+.glossary-body{
+  display:none;
+  grid-template-columns:repeat(auto-fit,minmax(175px,1fr));
+  gap:6px;margin-bottom:.75rem;
+}
+.glossary-body.open{display:grid}
+.gterm{
+  background:var(--b50);border:1px solid var(--b200);
+  border-radius:var(--radius);padding:.4rem .7rem;
+  font-size:.75rem;font-family:var(--ff-mono);color:var(--b800);
+  display:flex;gap:6px;align-items:baseline;
+}
+.gterm strong{color:var(--b600);font-weight:600;flex-shrink:0}
+
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div>
+    <h1>Micro<span>Lab</span></h1>
+    <div class="tagline">Economics Decision Simulator · Costs &amp; Supply</div>
+  </div>
+  <div class="header-author">
+    <div class="course">Managerial Economics</div>
+    <div class="author">Julián Díaz Tautiva, PhD</div>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- PANTALLA 0 — INTRODUCCIÓN -->
+<div id="screen-intro" class="screen active">
+  <div class="intro-hero">
+    <h2><span style="color:var(--b400)">Micro</span>Lab</h2>
+    <p style="font-size:1.05rem;color:var(--b100);margin-bottom:.4rem;font-weight:500">Economics Decision Simulator</p>
+    <p>You will take on the role of bakery managers and make real economic decisions grounded in short-run cost and supply theory.</p>
+  </div>
+
+  <div class="instructions-box">
+    <div class="instructions-header">
+      <div class="instructions-header-icon">📋</div>
+      <h3>Activity Instructions</h3>
+    </div>
+    <div class="instructions-body">
+      <ol class="instr-steps">
+        <li class="instr-step"><div class="instr-step-num">1</div><div class="instr-step-text"><strong>Form your team</strong> — Work in groups of 3. Each group will select a different firm from the 10 available. Each firm has unique parameters — cross-group copying will not help.</div></li>
+        <li class="instr-step"><div class="instr-step-num">2</div><div class="instr-step-text"><strong>Complete the cost table by hand</strong> — Each round, TC and VC are pre-filled. Your group must calculate MC, AVC, and ATC using the formulas and enter each value. The table self-corrects in real time: green = correct, red = revise.</div></li>
+        <li class="instr-step"><div class="instr-step-num">3</div><div class="instr-step-text"><strong>Analyze the chart</strong> — Once all cells are correct, the chart appears automatically showing ATC, MC, the market price line, and the long-run equilibrium point. Use it to support your production decision.</div></li>
+        <li class="instr-step"><div class="instr-step-num">4</div><div class="instr-step-text"><strong>Make your production decision</strong> — Apply the relevant economic condition for each round and enter the optimal quantity. If your answer is incorrect, you will receive an economic hint — the simulator never reveals the answer directly.</div></li>
+        <li class="instr-step"><div class="instr-step-num">5</div><div class="instr-step-text"><strong>Write your group conclusion</strong> — After each correct decision, your group must write a brief conclusion before advancing. It will be included in your final report.</div></li>
+        <li class="instr-step"><div class="instr-step-num">6</div><div class="instr-step-text"><strong>Export your PDF report</strong> — After completing all 4 rounds, download a full report with results, conclusions, performance feedback, and plenary discussion questions.</div></li>
+      </ol>
+      <div class="instr-note"><div class="instr-note-icon">⚠️</div><div><strong>Important:</strong> Each firm's parameters (FC, a, b) are confidential and only revealed once a firm is selected. Each group works their own case — numerical results will differ across groups even though the same formulas apply.</div></div>
+    </div>
+  </div>
+
+  <div class="section-lbl">Economic cases covered</div>
+  <div class="cases-grid">
+    <div class="case-card"><div class="case-num">1</div><div class="case-title">Competitive Market Equilibrium</div><div class="case-desc">The firm is a price-taker. The goal is to find the quantity that maximizes profit.</div><div class="case-concept">P = MC → q* = (P − a) / (2b)</div></div>
+    <div class="case-card"><div class="case-num">2</div><div class="case-title">Price Drop &amp; Shutdown Condition</div><div class="case-desc">When price falls, the firm decides whether to adjust output or shut down temporarily to minimize losses.</div><div class="case-concept">Operate if P ≥ AVC min (= a)</div></div>
+    <div class="case-card"><div class="case-num">3</div><div class="case-title">Input Cost Shock &amp; Shutdown Point</div><div class="case-desc">A rise in variable costs shifts MC and AVC upward, reducing q* or forcing shutdown.</div><div class="case-concept">MC_adj = (a + 2bq)·m; shutdown if P &lt; a·m</div></div>
+    <div class="case-card"><div class="case-num">4</div><div class="case-title">Short-Run Supply Curve</div><div class="case-desc">The SR supply curve is the segment of MC above AVC minimum, evaluated at different price levels.</div><div class="case-concept">S(P): q* for each P ≥ AVC min</div></div>
+  </div>
+
+  <div class="card" style="margin-top:.5rem">
+    <h3>Quadratic Cost Structure</h3>
+    <p style="margin-bottom:.5rem">The following cost functions are <strong>exclusive to this activity</strong> and have been designed for pedagogical purposes. In real business contexts, cost functions may vary significantly depending on industry, production technology, and market structure.</p>
+    <div class="formula-preview">
+      <div class="ft">Cost functions — TC(q) = FC + a·q + b·q²</div>
+      VC(q) = a·q + b·q² &nbsp;&nbsp;·&nbsp;&nbsp; MC(q) = a + 2b·q<br>
+      AVC(q) = a + b·q &nbsp;&nbsp;·&nbsp;&nbsp; ATC(q) = FC/q + a + b·q<br>
+      LR equilibrium: q_eq = √(FC / b) &nbsp;→&nbsp; min price = ATC(q_eq)<br><br>
+      <span style="color:var(--b300);font-size:.75rem">▶ All costs and prices are expressed in USD &nbsp;·&nbsp; q represents lots of 100 bread units</span>
+    </div>
+    <p style="margin-top:.85rem;font-size:.85rem;color:var(--b500)">Each round you will complete the cost table by hand. Once all cells are verified, the system will automatically display the chart with MC, ATC, and the equilibrium point marked.</p>
+  </div>
+
+
+  <div class="card" style="margin-top:.5rem">
+    <h3>Glossary of abbreviations</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:.5rem">
+      <div class="case-concept" style="margin:0"><strong>TC</strong> — Total Cost</div>
+      <div class="case-concept" style="margin:0"><strong>VC</strong> — Variable Cost</div>
+      <div class="case-concept" style="margin:0"><strong>FC</strong> — Fixed Cost</div>
+      <div class="case-concept" style="margin:0"><strong>MC</strong> — Marginal Cost</div>
+      <div class="case-concept" style="margin:0"><strong>AVC</strong> — Average Variable Cost</div>
+      <div class="case-concept" style="margin:0"><strong>ATC</strong> — Average Total Cost</div>
+      <div class="case-concept" style="margin:0"><strong>P</strong> — Market price</div>
+      <div class="case-concept" style="margin:0"><strong>q*</strong> — Optimal quantity</div>
+      <div class="case-concept" style="margin:0"><strong>a, b</strong> — Cost function parameters</div>
+      <div class="case-concept" style="margin:0"><strong>m</strong> — Variable cost multiplier</div>
+      <div class="case-concept" style="margin:0"><strong>LR</strong> — Long Run</div>
+      <div class="case-concept" style="margin:0"><strong>SR</strong> — Short Run</div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="accent" onclick="show('screen-select')">Select your firm →</button>
+  </div>
+</div>
+
+<!-- PANTALLA 1 — SELECCIÓN EMPRESA -->
+<div id="screen-select" class="screen">
+  <div class="card card-blue">
+    <div class="section-lbl">Step 1 of 2</div>
+    <h2>Choose your firm</h2>
+    <p style="margin-top:.4rem">There are 10 bakery firms available, each with distinct parameters. Click one to view its data — parameters are only revealed once a firm is selected.</p>
+    <div class="company-grid" id="company-grid"></div>
+    <div class="lock-notice" id="lock-notice">✓ Firm selected and locked. Selection cannot be changed once the simulation has started.</div>
+    <div class="params-panel" id="params-panel">
+      <h3>Your firm's parameters</h3>
+      <div class="metrics" id="params-metrics"></div>
+      <div class="formula-box" id="params-formula"></div>
+    </div>
+    <div class="names-wrap" id="names-wrap" style="display:none">
+      <label>Group members</label>
+      <div id="members-list">
+        <div class="member-row"><span class="member-num">1</span><input type="text" class="member-input" placeholder="Full name — Member 1"></div>
+        <div class="member-row"><span class="member-num">2</span><input type="text" class="member-input" placeholder="Full name — Member 2"></div>
+        <div class="member-row"><span class="member-num">3</span><input type="text" class="member-input" placeholder="Full name — Member 3"></div>
+      </div>
+      <button class="outline" onclick="addMember()" style="margin-top:.6rem;font-size:.8rem;padding:7px 14px">+ Add another member</button>
+    </div>
+    <div class="btn-row" style="margin-top:1.25rem">
+      <button class="outline" onclick="show('screen-intro')">← Back</button>
+      <button id="btn-start" onclick="startGame()" disabled>Start simulation →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PANTALLA 2 — RONDAS -->
+<div id="screen-round" class="screen">
+  <div class="progress-wrap" id="progress-wrap"></div>
+  <div id="round-content"></div>
+</div>
+
+<!-- PANTALLA 3 — RESULTADOS -->
+<div id="screen-final" class="screen">
+  <h2 style="margin-bottom:.25rem">Final Results</h2>
+  <p id="final-subtitle" class="muted" style="font-family:var(--ff-mono);font-size:.78rem;margin-bottom:1.5rem"></p>
+  <div id="final-global"></div>
+  <div id="final-rounds"></div>
+  <div id="final-reflexion"></div>
+  <div class="btn-row" style="margin-top:1.5rem">
+    <button class="gold-btn" onclick="exportPDF()">⬇ Export PDF Report</button>
+    <button class="outline" onclick="resetGame()">↺ New simulation</button>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+/* ── 10 EMPRESAS ── */
+const COMPANIES = [
+  {id:1,  name:"Our Bread",       icon:"🍞", cf:60000,  a:10000, b:1000},
+  {id:2,  name:"The Oven",          icon:"🔥", cf:65000,  a:12000, b:1200},
+  {id:3,  name:"The Dough",           icon:"🫓", cf:55000,  a:9000,  b:900},
+  {id:4,  name:"Good Bread",          icon:"🥐", cf:62000,  a:11000, b:1100},
+  {id:5,  name:"Southern Wheat",        icon:"🌾", cf:57000,  a:9500,  b:950},
+  {id:6,  name:"Flour & Fire",    icon:"🫙", cf:70000,  a:13000, b:1400},
+  {id:7,  name:"Home Bread",       icon:"🏠", cf:50000,  a:8500,  b:850},
+  {id:8,  name:"The Bakery",      icon:"🥖", cf:63000,  a:11500, b:1150},
+  {id:9,  name:"Bread Artisans", icon:"👨‍🍳", cf:61000,  a:10500, b:1050},
+  {id:10, name:"Baked Crucible",       icon:"✨", cf:75000,  a:14000, b:1500},
+  {id:11, name:"The Kneading Bowl",    icon:"🫶", cf:59000,  a:9800,  b:980},
+  {id:12, name:"Golden Wheat",         icon:"🌻", cf:68000,  a:12500, b:1300}
+];
+
+/* ── ESCALA DE PRESENTACIÓN ──
+   Internal cost and price values are divided by 1,000 for USD display.
+   Internal quantity q represents lots of 100 units (q=20 → 2,000 units).
+   All internal calculations remain in the original scale. */
+const PRICE_SCALE = 1000;   // precio interno ÷ 1000 = USD
+const QTY_SCALE   = 100;    // q interna × 100 = unidades reales
+function usd(val){ return '$' + (val/PRICE_SCALE).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:1}); }
+function usdFmt(val){ return (val/PRICE_SCALE).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:1}); }
+function qDisplay(q){ return (q*QTY_SCALE).toLocaleString('en-US')+' units'; }
+
+/* ── FUNCIONES ECONÓMICAS ── */
+const fCT    = (co,q,m=1) => co.cf + (co.a*q + co.b*q*q)*m;
+const fCV    = (co,q,m=1) => (co.a*q + co.b*q*q)*m;
+const fCMg   = (co,q,m=1) => (co.a + 2*co.b*q)*m;
+const fCVMe  = (co,q,m=1) => q>0 ? fCV(co,q,m)/q : Infinity;
+const fCTMe  = (co,q,m=1) => q>0 ? fCT(co,q,m)/q : Infinity;
+const fOptQ  = (co,p,m=1) => Math.max(0, Math.round((p/m - co.a)/(2*co.b)));
+const fBen   = (co,q,p,m=1) => p*q - fCT(co,q,m);
+const fCVMin = (co,m=1)   => co.a*m;
+const fQEq   = (co,m=1)   => Math.max(1, Math.round(Math.sqrt(co.cf/(co.b*m))));
+
+/* ── RONDAS ── */
+const ROUNDS = [
+  {
+    num:1, title:"Competitive Market Equilibrium",
+    narrative:"Your bakery operates in a perfectly competitive market. The market price is fixed and your firm cannot influence it. Find the quantity that maximizes profit by applying the first-order condition.",
+    event:null, cvMult:1, getPrecio:()=>50000,
+    concept:"Profit-maximization condition: P = MC → q* = (P − a) / (2b)",
+    taskText:"Complete the table by calculating MC, AVC, and ATC for each q. Once all cells are correct, the chart will appear. Then determine q* and write your group conclusion.",
+    inputLabel:"Optimal quantity to produce (q*)",
+    motivations:[
+      "Remember: profit is maximized where price equals marginal cost. Check your table for the MC value closest to the market price ($50 USD/lot).",
+      "Look at the chart: where do the price line and the MC curve intersect? That crossing gives you the q* you are looking for.",
+      "Apply the formula directly: q* = (P − a) / (2b). Substitute your firm's parameters and round to the nearest integer."
+    ],
+    validate(v,co){ return Math.abs(v - fOptQ(co,50000)) <= 2; },
+    getResult(v,co){ const p=50000; return {q:v, precio:p, b:fBen(co,v,p), nota:`Theoretical q* = ${fOptQ(co,50000)} · Maximum profit`}; }
+  },
+  {
+    num:2, title:"Price Drop & Shutdown Condition",
+    narrative:"A supermarket chain enters the local market and drives the price down. Decide whether to adjust output or shut down temporarily to minimize losses.",
+    event:{label:"Market shock", text:"The price falls from $50 to $35 USD per lot. Is it still worth operating, and at what quantity?"},
+    cvMult:1, getPrecio:()=>35000,
+    concept:"SR operating condition: produce if P ≥ AVC minimum (= a). If P < a → shut down (q = 0).",
+    taskText:"Complete the table. Check whether the price covers your firm's AVC minimum. If P ≥ a: produce where P = MC. If P < a: enter q = 0.",
+    inputLabel:"Quantity to produce (0 = temporary shutdown)",
+    motivations:[
+      "The key is the shutdown condition: is the price ($35 USD/lot) greater or less than your firm's AVC minimum (= a ÷ 1,000)?",
+      "Look at the chart: if the price line falls below the AVC minimum, shutting down is optimal. If it is above, find where it crosses MC.",
+      "Compare directly: is $35 USD ≥ your firm's AVC minimum? If yes, calculate q* using the formula. If not, enter 0."
+    ],
+    validate(v,co){
+      const p=35000;
+      if(p < fCVMin(co)) return v===0;
+      return Math.abs(v - fOptQ(co,p)) <= 2;
+    },
+    getResult(v,co){
+      const p=35000, opera=v>0;
+      return {q:v, precio:p, b:fBen(co,v,p), nota:opera?`Operating. AVC min = ${usd(co.a)} USD`:`Temporary shutdown. Loss = −FC = −${usd(co.cf)} USD`};
+    }
+  },
+  {
+    num:3, title:"Input Cost Shock & Shutdown Point",
+    narrative:"The price of flour and other key inputs rises due to global supply disruptions. Your bakery's variable costs increase. Reassess whether you can continue operating and at what quantity.",
+    event:{label:"Variable cost impact", text:"Variable costs increase 25% (multiplier ×1.25). The market price remains constant."},
+    cvMult:1.25, getPrecio:()=>35000,
+    concept:"Input cost shock: MC_adj = (a + 2bq)·1.25. Shut down if P < a·1.25.",
+    taskText:"The table reflects the adjusted costs. Complete MC, AVC, and ATC with the ×1.25 multiplier applied to VC. Verify the new shutdown condition and decide.",
+    inputLabel:"Quantity (0 = temporary shutdown)",
+    motivations:[
+      "The cost shock raises MC. Recalculate with ×1.25: MC_adj = (a + 2b·q)·1.25. At what q does it cross the market price?",
+      "Check whether the price covers the new adjusted AVC minimum (= a·1.25). If it does not, shutting down temporarily is optimal.",
+      "Adjusted formula: q* = (P/1.25 − a)/(2b). Substitute the current market price. If the result is zero or negative, enter q = 0."
+    ],
+    validate(v,co){
+      const p=35000, m=1.25;
+      if(p < fCVMin(co,m)) return v===0;
+      return Math.abs(v - fOptQ(co,p,m)) <= 2;
+    },
+    getResult(v,co){
+      const p=35000, m=1.25;
+      return {q:v, precio:p, b:fBen(co,v,p,m), nota:`VC ×1.25. Adj. AVC min = ${usd(fCVMin(co,m))} USD`};
+    }
+  },
+  {
+    num:4, title:"Short-Run Supply Curve",
+    narrative:"With the market stabilized, it is time to build your firm's short-run supply curve. This curve shows how much you are willing to produce at each possible price level.",
+    event:{label:"Three price scenarios", text:"Evaluate your optimal output for P = $27, P = $42, and P = $54 USD per lot."},
+    cvMult:1, getPrecio:()=>42000,
+    concept:"SR supply curve: segment of MC where P ≥ AVC minimum (= a).",
+    taskText:"For each price, calculate q* = (P − a)/(2b). If P < a, that point is q = 0. Sum the three q* values and divide by 3. Enter the rounded average.",
+    inputLabel:"Average of the three q* values (P=$27, $42 and $54 USD/lot)",
+    motivations:[
+      "Calculate q* separately for each price ($27, $42, $54 USD). If the price is less than your firm's AVC minimum, that scenario gives q* = 0.",
+      "Verify the operating condition for each price. Then calculate the q* values and average them.",
+      "For each price ($27, $42, $54 USD): convert to internal scale (×1,000) and apply q* = (P − a)/(2b) if P ≥ AVC min, else q* = 0. Sum and divide by 3."
+    ],
+    validate(v,co){
+      const prices=[27000,42000,54000];
+      const qs=prices.map(p => p<fCVMin(co)?0:fOptQ(co,p));
+      return Math.abs(v - Math.round(qs.reduce((s,x)=>s+x,0)/3)) <= 2;
+    },
+    getResult(v,co){
+      const prices=[27000,42000,54000];
+      const qs=prices.map(p => p<fCVMin(co)?0:fOptQ(co,p));
+      return {q:v, precio:42000, b:fBen(co,qs[1],42000), nota:`Supply points: q=${qs[0]} ($27 USD) · q=${qs[1]} ($42 USD) · q=${qs[2]} ($54 USD)`};
+    }
+  }
+];
+
+/* ── ESTADO ── */
+let S = {co:null, names:'', round:0, results:[], attempts:{}, chartInst:null, totalCells:36, locked:false};
+
+/* ── BUILD COMPANY GRID ── */
+(function(){
+  const grid=document.getElementById('company-grid');
+  COMPANIES.forEach(co=>{
+    const d=document.createElement('div');
+    d.className='co-card';
+    d.innerHTML='<div class="co-icon">'+co.icon+'</div><div class="co-name">'+co.name+'</div>';
+    d.onclick=()=>selectCompany(co,d);
+    grid.appendChild(d);
+  });
+})();
+
+function selectCompany(co,el){
+  if(S.locked) return;
+  S.co=co;
+  document.querySelectorAll('.co-card').forEach(c=>{
+    c.classList.remove('selected','locked','locked-selected');
+  });
+  document.getElementById('lock-notice').classList.remove('show');
+  el.classList.add('selected');
+  document.getElementById('names-wrap').style.display='block';
+  document.getElementById('btn-start').disabled=false;
+  document.getElementById('params-metrics').innerHTML=
+    '<div class="metric"><div class="metric-label">Firm</div><div class="metric-value">'+co.icon+' '+co.name+'</div></div>'+
+    '<div class="metric"><div class="metric-label">Fixed Cost (FC)</div><div class="metric-value">'+usd(co.cf)+' USD</div></div>'+
+    '<div class="metric"><div class="metric-label">Parameter a (USD)</div><div class="metric-value">'+usdFmt(co.a)+'</div></div>'+
+    '<div class="metric"><div class="metric-label">Parameter b (USD)</div><div class="metric-value">'+usdFmt(co.b)+'</div></div>'+
+    '<div class="metric"><div class="metric-label">AVC minimum</div><div class="metric-value accent">'+usd(co.a)+' USD / lot</div></div>';
+  document.getElementById('params-formula').innerHTML=
+    '<div class="ft">Your firm\'s cost formulas (USD)</div>'+
+    'TC(q) = '+usdFmt(co.cf)+' + '+usdFmt(co.a)+'\u00b7q + '+usdFmt(co.b)+'\u00b7q\u00b2<br>'+
+    'MC(q) = '+usdFmt(co.a)+' + '+(usdFmt(co.b*2))+'\u00b7q &nbsp;\u00b7&nbsp; '+
+    'AVC(q) = '+usdFmt(co.a)+' + '+usdFmt(co.b)+'\u00b7q &nbsp;\u00b7&nbsp; '+
+    'q in lots of 100 units';
+  document.getElementById('params-panel').classList.add('show');
+}
+
+function addMember(){
+  const list=document.getElementById('members-list');
+  const num=list.querySelectorAll('.member-row').length+1;
+  const row=document.createElement('div');
+  row.className='member-row';
+  row.innerHTML='<span class="member-num">'+num+'</span><input type="text" class="member-input" placeholder="Nombre y apellido — Integrante '+num+'">';
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function getNames(){
+  const inputs=[...document.querySelectorAll('.member-input')];
+  const filled=inputs.map(i=>i.value.trim()).filter(v=>v.length>0);
+  return filled.length>0 ? filled.join(' · ') : (S.co ? S.co.name : 'Grupo');
+}
+
+function startGame(){
+  S.names=getNames();
+  S.round=0; S.results=[]; S.attempts={}; S.chartInst=null;
+  /* Lock company selection permanently */
+  S.locked=true;
+  document.querySelectorAll('.co-card').forEach(c=>{
+    if(c.classList.contains('selected')){
+      c.classList.remove('selected');
+      c.classList.add('locked-selected');
+    } else {
+      c.classList.add('locked');
+    }
+  });
+  document.getElementById('lock-notice').classList.add('show');
+  show('screen-round');
+  renderRound();
+}
+
+/* ── RENDER ROUND ── */
+function renderRound(){
+  if(S.chartInst){ S.chartInst.destroy(); S.chartInst=null; }
+  const r=ROUNDS[S.round], co=S.co, m=r.cvMult, p=r.getPrecio();
+
+  document.getElementById('progress-wrap').innerHTML=
+    ROUNDS.map((_,i)=>'<div class="ps '+(i<S.round?'done':i===S.round?'active':'')+'"></div>').join('');
+
+  /* Key q values */
+  const qE   = fQEq(co,m);
+  const qOpt = fOptQ(co,p,m);
+  const pEq  = Math.round(fCTMe(co,qE,m));
+
+  /* Build 12-row window covering both qE and qOpt */
+  const lo = Math.min(qE, qOpt > 0 ? qOpt : qE);
+  const hi = Math.max(qE, qOpt > 0 ? qOpt : qE);
+  let qStart = Math.max(1, Math.round((lo+hi)/2) - 5);
+  if(qStart > lo) qStart = Math.max(1, lo - 1);
+  if(qStart + 11 < hi) qStart = Math.max(1, hi - 11);
+  const qEnd = qStart + 11;
+  const totalCells = 36; /* always 12 rows × 3 cols */
+  S.totalCells = totalCells;
+
+  /* Build table rows */
+  let rows='';
+  for(let q=qStart; q<=qEnd; q++){
+    const ctV  = Math.round(fCT(co,q,m));
+    const cvV  = Math.round(fCV(co,q,m));
+    const ctVd = usdFmt(ctV);
+    const cvVd = usdFmt(cvV);
+    /* Store data-correct in USD (÷PRICE_SCALE) so student input matches displayed scale */
+    const cmgC = parseFloat((fCMg(co,q,m)/PRICE_SCALE).toFixed(1));
+    const cvmeC= parseFloat((fCVMe(co,q,m)/PRICE_SCALE).toFixed(1));
+    const ctmeC= parseFloat((fCTMe(co,q,m)/PRICE_SCALE).toFixed(1));
+    const isEq = (q===qE);
+    const eqCls= isEq ? ' eq-row' : '';
+    rows += '<tr>';
+    rows += '<td'+(isEq?' class="eq-row"':'')+'>'+q+'</td>';
+    rows += '<td class="given'+eqCls+'">$'+ctVd+'</td>';
+    rows += '<td class="given'+eqCls+'">$'+cvVd+'</td>';
+    rows += '<td class="si'+eqCls+'"><input type="number" step="0.1" data-correct="'+cmgC+'" oninput="checkCell(this)" placeholder="?"></td>';
+    rows += '<td class="si'+eqCls+'"><input type="number" step="0.1" data-correct="'+cvmeC+'" oninput="checkCell(this)" placeholder="?"></td>';
+    rows += '<td class="si'+eqCls+'"><input type="number" step="0.1" data-correct="'+ctmeC+'" oninput="checkCell(this)" placeholder="?"></td>';
+    rows += '</tr>';
+  }
+
+  document.getElementById('round-content').innerHTML =
+    '<div class="round-header">'+
+      '<div class="round-badge">Round<span>'+r.num+'</span></div>'+
+      '<div>'+
+        '<h2 style="font-size:1.4rem">'+r.title+'</h2>'+
+        '<p style="font-size:.76rem;color:var(--b500);font-family:var(--ff-mono)">'+co.name+' · '+co.icon+' · Round '+r.num+' of '+ROUNDS.length+'</p>'+
+      '</div>'+
+    '</div>'+
+    '<div class="narrative">'+r.narrative+'</div>'+
+    (r.event ? '<div class="event-box"><div class="event-label">&#9651; '+r.event.label+'</div><p>'+r.event.text+'</p></div>' : '')+
+    '<div class="card card-blue">'+
+      '<h3>Your firm data for this round</h3>'+
+      '<div class="metrics">'+
+        '<div class="metric"><div class="metric-label">FC (USD)</div><div class="metric-value">'+usd(co.cf)+'</div></div>'+
+        '<div class="metric"><div class="metric-label">Parameter a (USD)</div><div class="metric-value">'+usdFmt(co.a)+'</div></div>'+
+        '<div class="metric"><div class="metric-label">Parameter b (USD)</div><div class="metric-value">'+usdFmt(co.b)+'</div></div>'+
+        '<div class="metric"><div class="metric-label">Precio (USD/lote)</div><div class="metric-value accent">'+usd(p)+'</div></div>'+
+        (m!==1?'<div class="metric"><div class="metric-label">VC Multiplier</div><div class="metric-value accent">\u00d7'+m+'</div></div>':'')+
+        '<div class="metric"><div class="metric-label">CVMe m\u00edn'+(m!==1?' aj.':'')+'</div><div class="metric-value accent">'+usd(fCVMin(co,m))+'</div></div>'+
+      '</div>'+
+      '<div class="formula-box">'+
+        '<div class="ft">Total cost function for this round</div>'+
+        'TC(q) = '+usdFmt(co.cf)+' + '+usdFmt(co.a)+'·q + '+usdFmt(co.b)+'·q² (USD)'+(m!==1?' &nbsp;·&nbsp; VC×'+m:'')+'<br>'+
+        'ATC(q) = TC(q) / q &nbsp;·&nbsp; q in lots of 100 units'+
+      '</div>'+
+    '</div>'+
+    '<div class="card">'+
+      '<div class="glossary-toggle" onclick="toggleGlossary(this)">'+'<span>📖 Abbreviation glossary</span><span class="gt-arrow">▼</span>'+'</div>'+'<div class="glossary-body">'+'<div class="gterm"><strong>TC</strong> Total Cost</div>'+'<div class="gterm"><strong>VC</strong> Variable Cost</div>'+'<div class="gterm"><strong>FC</strong> Fixed Cost</div>'+'<div class="gterm"><strong>MC</strong> Marginal Cost</div>'+'<div class="gterm"><strong>AVC</strong> Average Variable Cost</div>'+'<div class="gterm"><strong>ATC</strong> Average Total Cost</div>'+'<div class="gterm"><strong>P</strong> Market price</div>'+'<div class="gterm"><strong>q*</strong> Optimal quantity</div>'+'<div class="gterm"><strong>a, b</strong> Cost parameters</div>'+'<div class="gterm"><strong>m</strong> VC multiplier</div>'+'<div class="gterm"><strong>LR</strong> Long Run</div>'+'<div class="gterm"><strong>SR</strong> Short Run</div>'+'</div>'+
+    '<h3>Cost table \u2014 Complete MC, AVC, and ATC</h3>'+
+      '<p style="font-size:.81rem;color:var(--b500);margin-bottom:.6rem">'+
+        'TC and VC are in USD (÷1,000). q = lots of 100 units. Enter MC, AVC, and ATC <strong>in USD</strong> using the formulas. Tolerance: ±$1 USD. '+
+        'Progress: <strong id="cc">0</strong> / '+totalCells+' correct cells.'+
+      '</p>'+
+      '<div class="cost-table-wrap">'+
+        '<table id="ctable">'+
+          '<thead><tr><th>q (lots×100)</th><th>TC (USD)</th><th>VC (USD)</th><th>MC (USD)</th><th>AVC (USD)</th><th>ATC (USD)</th></tr></thead>'+
+          '<tbody>'+rows+'</tbody>'+
+        '</table>'+
+      '</div>'+
+      '<div class="eq-highlight" id="eqhl">'+
+        '<div class="eq-dot-sm"></div>'+
+        '<span><strong>Long-run equilibrium:</strong> Minimum ATC \u2248 '+usd(pEq)+' USD. At this price per lot the firm exactly covers all costs (zero economic profit).</span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="chart-wrap" id="chart-wrap">'+
+      '<h3>Cost curves chart \u2014 Short run</h3>'+
+      '<div class="chart-canvas-wrap"><canvas id="cost-chart"></canvas></div>'+
+      '<div class="chart-legend">'+
+        '<span><span class="leg-dot" style="background:#0F3460;height:3px"></span>ATC</span>'+
+        '<span><span class="leg-dot" style="background:#42A5F5"></span>MC</span>'+
+        '<span><span class="leg-dot" style="border-top:2px dashed #E8A000"></span>Price</span>'+
+        '<span><span class="leg-circle"></span>LR Equilibrium</span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="card" id="decision-card" style="display:none">'+
+      '<h3>Group decision</h3>'+
+      '<p style="margin-bottom:.75rem">'+r.taskText+'</p>'+
+      '<div class="formula-box">'+r.concept+'</div>'+
+      '<div class="decision-area" style="margin-top:1rem">'+
+        '<label>'+r.inputLabel+':</label>'+
+        '<input type="number" id="dec-input" min="0" max="60" step="1" placeholder="q =">'+
+      '</div>'+
+      '<div class="feedback" id="fb"></div>'+
+      '<div class="conclusion-wrap" id="conclusion-wrap" style="display:none">'+
+        '<label>Group conclusion for this round:</label>'+
+        '<textarea id="conclusion-input" placeholder="Briefly describe what your group learned this round: what determined the optimal decision?, how does it connect to the theory?"></textarea>'+
+        '<div class="char-hint">Minimum 30 characters recommended.</div>'+
+      '</div>'+
+      '<div class="btn-row" id="dec-btns">'+
+        '<button class="accent" onclick="submitDecision()">Confirm decision</button>'+
+      '</div>'+
+      '<div class="btn-row" id="next-btns" style="display:none">'+
+        '<button onclick="confirmConclusion()">Save conclusion &amp; continue \u2192</button>'+
+      '</div>'+
+    '</div>';
+
+  S.chartInst = null;
+}
+
+/* ── CHECK CELL ── */
+function checkCell(inp){
+  const correct = parseFloat(inp.dataset.correct);
+  const val     = parseFloat(inp.value);
+  if(isNaN(val)){ inp.className=''; return; }
+  const ok = Math.abs(val - correct) <= 1;   /* tolerance ±$1 USD */
+  inp.classList.toggle('ok',  ok);
+  inp.classList.toggle('err', !ok);
+  const all = [...document.querySelectorAll('#ctable td.si input')];
+  const okCount = all.filter(i=>i.classList.contains('ok')).length;
+  document.getElementById('cc').textContent = okCount;
+  if(okCount === S.totalCells && !S.chartInst) revealChart();
+}
+
+/* ── REVEAL CHART ── */
+function revealChart(){
+  const r=ROUNDS[S.round], co=S.co, m=r.cvMult, p=r.getPrecio();
+  document.getElementById('chart-wrap').classList.add('show');
+  document.getElementById('eqhl').classList.add('show');
+  document.getElementById('decision-card').style.display='block';
+
+  /* Read window from rendered rows */
+  const tRows = [...document.querySelectorAll('#ctable tbody tr')];
+  const qStart = parseInt(tRows[0].cells[0].textContent);
+  const qEnd   = parseInt(tRows[tRows.length-1].cells[0].textContent);
+  const qE     = fQEq(co,m);
+
+  const labels=[], ctmeD=[], cmgD=[], priceD=[], eqD=[];
+  for(let q=qStart; q<=qEnd; q++){
+    labels.push(q);
+    ctmeD.push(Math.round(fCTMe(co,q,m)));
+    cmgD.push(Math.round(fCMg(co,q,m)));
+    priceD.push(p);
+    eqD.push(q===qE ? Math.round(fCTMe(co,qE,m)) : null);
+  }
+
+  const ctx = document.getElementById('cost-chart').getContext('2d');
+  S.chartInst = new Chart(ctx,{
+    type:'line',
+    data:{labels, datasets:[
+      {label:'ATC',  data:ctmeD,  borderColor:'#0F3460', backgroundColor:'rgba(15,52,96,.07)', borderWidth:2.5, tension:.4, pointRadius:2, fill:true},
+      {label:'MC',   data:cmgD,   borderColor:'#42A5F5', backgroundColor:'transparent',        borderWidth:2,   tension:.4, pointRadius:2},
+      {label:'Precio',data:priceD, borderColor:'#E8A000', backgroundColor:'transparent',        borderWidth:1.5, borderDash:[6,4], pointRadius:0},
+      {label:'Equilibrio', data:eqD, borderColor:'transparent', backgroundColor:'#1E88E5',
+       pointRadius:eqD.map(v=>v!==null?9:0),
+       pointBackgroundColor:'#1E88E5', pointBorderColor:'#fff', pointBorderWidth:2.5, showLine:false}
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'rgba(13,33,68,.93)',
+          titleFont:{family:'JetBrains Mono',size:11},
+          bodyFont:{family:'JetBrains Mono',size:11},
+          padding:10,
+          callbacks:{
+            title: c => 'q = '+c[0].label+' lots = '+(parseInt(c[0].label)*100).toLocaleString()+' units',
+            label: c => c.raw!==null ? c.dataset.label+': $'+usdFmt(Math.round(c.raw))+' USD' : null
+          }
+        }
+      },
+      scales:{
+        x:{title:{display:true,text:'Quantity (q)',font:{family:'JetBrains Mono',size:11},color:'#1565A8'}, grid:{color:'rgba(21,101,168,.07)'}, ticks:{font:{family:'JetBrains Mono',size:10}}},
+        y:{title:{display:true,text:'Cost ($)',   font:{family:'JetBrains Mono',size:11},color:'#1565A8'}, grid:{color:'rgba(21,101,168,.07)'}, ticks:{font:{family:'JetBrains Mono',size:10}, callback:v=>'$'+usdFmt(Math.round(v))+' USD'}}
+      }
+    }
+  });
+  document.getElementById('chart-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ── SUBMIT DECISION ── */
+function submitDecision(){
+  const r=ROUNDS[S.round], co=S.co;
+  const val=parseInt(document.getElementById('dec-input').value, 10);
+  const fb=document.getElementById('fb');
+  if(isNaN(val)||val<0||val>60){
+    fb.className='feedback motivate show';
+    fb.innerHTML='<strong>Out of range.</strong> Enter an integer between 0 and 60.';
+    return;
+  }
+  const key='r'+r.num;
+  S.attempts[key]=(S.attempts[key]||0)+1;
+  if(!r.validate(val,co)){
+    const idx=Math.min(S.attempts[key]-1, r.motivations.length-1);
+    fb.className='feedback motivate show';
+    fb.innerHTML='<strong>Keep thinking! 💡</strong> '+r.motivations[idx];
+    return;
+  }
+  const res=r.getResult(val,co);
+  res.roundTitle=r.title; res.roundNum=r.num; res.attempts=S.attempts[key];
+  S.results.push(res);
+  fb.className='feedback success show';
+  fb.innerHTML='<strong>Correct! Decision recorded.</strong> With q = '+val+', profit = '+fmtBen(res.b)+'. '+res.nota;
+  document.getElementById('dec-btns').style.display='none';
+  document.getElementById('dec-input').disabled=true;
+  document.getElementById('conclusion-wrap').style.display='block';
+  document.getElementById('next-btns').style.display='flex';
+}
+
+/* ── CONFIRM CONCLUSION ── */
+function confirmConclusion(){
+  const txt=document.getElementById('conclusion-input').value.trim();
+  const fb=document.getElementById('fb');
+  if(!txt||txt.length<10){
+    fb.className='feedback motivate show';
+    fb.innerHTML='<strong>Please add a conclusion</strong> before continuing. Describe what your group learned this round.';
+    return;
+  }
+  S.results[S.results.length-1].conclusion=txt;
+  if(S.chartInst){ S.chartInst.destroy(); S.chartInst=null; }
+  S.round++;
+  if(S.round<ROUNDS.length) renderRound(); else showFinal();
+}
+
+/* ── FINAL SCREEN ── */
+function showFinal(){
+  show('screen-final');
+  const co=S.co;
+  document.getElementById('final-subtitle').textContent=
+    S.names+' · '+co.icon+' '+co.name+' · '+S.results.length+'/'+ROUNDS.length+' rounds';
+
+  const totalBen=S.results.reduce((s,r)=>s+r.b,0);
+  const avgAtt=(Object.values(S.attempts).reduce((s,v)=>s+v,0)/ROUNDS.length).toFixed(1);
+  const avgAttN=parseFloat(avgAtt);
+  const benOk=totalBen>=0;
+  const gc=benOk?'var(--green-mid)':'var(--red-mid)';
+  const gBg=benOk?'var(--green-lt)':'var(--red-lt)';
+  const perfMsg=avgAttN<=1.5
+    ?'Excellent performance. The group applied the maximization and shutdown conditions precisely from the first attempt.'
+    :avgAttN<=2.5
+    ?'Good performance. A few attempts were needed to adjust decisions, reflecting an active reasoning process.'
+    :'Developing performance. Review the conditions P = MC, the shutdown condition P ≥ AVC min, and the construction of the supply curve.';
+
+  document.getElementById('final-global').innerHTML=
+    '<div class="card" style="border:2px solid '+gc+';background:'+gBg+'">'+
+      '<h3 style="color:'+gc+'">Overall result</h3>'+
+      '<p style="margin-bottom:.5rem">'+(benOk?'Your bakery was profitable over the simulated period.':'Your bakery operated at a net loss.')+'</p>'+
+      '<p style="font-size:.85rem;color:var(--b700);margin-bottom:1rem"><strong>Retroalimentación:</strong> '+perfMsg+'</p>'+
+      '<div class="metrics">'+
+        '<div class="metric"><div class="metric-label">Accumulated profit</div><div class="metric-value" style="color:'+gc+'">'+fmtBen(totalBen)+'</div></div>'+
+        '<div class="metric"><div class="metric-label">Rondas completadas</div><div class="metric-value">'+S.results.length+' / '+ROUNDS.length+'</div></div>'+
+        '<div class="metric"><div class="metric-label">Avg. attempts</div><div class="metric-value">'+avgAtt+' per round</div></div>'+
+        '<div class="metric"><div class="metric-label">Firm</div><div class="metric-value" style="font-size:.82rem">'+co.icon+' '+co.name+'</div></div>'+
+      '</div>'+
+    '</div>';
+
+  let rCards='';
+  S.results.forEach(function(res){
+    const ok=res.b>=0;
+    rCards+=
+      '<div class="card" style="margin-bottom:.75rem">'+
+        '<div class="round-summary-header">'+
+          '<h3 style="margin:0">Round '+res.roundNum+' — '+res.roundTitle+'</h3>'+
+          '<span class="pill '+(ok?'pill-green':'pill-red')+'">'+fmtBen(res.b)+'</span>'+
+        '</div>'+
+        '<div class="result-row"><span class="rl">Quantity produced (q)</span><span class="rv">'+res.q+' lots</span></div>'+
+        '<div class="result-row"><span class="rl">Market price</span><span class="rv">'+usd(res.precio)+' USD/lote</span></div>'+
+        '<div class="result-row"><span class="rl">Profit</span><span class="rv '+(ok?'pos':'neg')+'">'+fmtBen(res.b)+'</span></div>'+
+        '<div class="result-row"><span class="rl">Attempts</span><span class="rv pill pill-blue">'+res.attempts+'</span></div>'+
+        '<div class="result-row"><span class="rl">'+res.nota+'</span></div>'+
+        (res.conclusion?'<div class="conclusion-display"><strong style="font-style:normal;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--b500)">Conclusión del grupo</strong><br>'+res.conclusion+'</div>':'')+
+      '</div>';
+  });
+  document.getElementById('final-rounds').innerHTML=rCards;
+
+  document.getElementById('final-reflexion').innerHTML=
+    '<div class="card card-gold">'+
+      '<h3>Discussion questions for the plenary</h3>'+
+      '<ol style="font-size:.9rem;line-height:2.1;padding-left:1.2rem;color:var(--b800)">'+
+        '<li>How did q* change when the price fell in Round 2? Why is the condition P = MC still valid?</li>'+
+        '<li>What would happen if the price fell below your firm\'s AVC minimum? What decision would you make?</li>'+
+        '<li>How did you interpret the upward shift in MC in Round 3 when input costs rose?</li>'+
+        '<li>What shape does your supply curve take using the three points from Round 4? Is it upward-sloping? Why?</li>'+
+        '<li>How does the LR equilibrium point differ from the profit-maximizing q* in the short run?</li>'+
+      '</ol>'+
+    '</div>';
+}
+
+/* ── PDF EXPORT ── */
+function exportPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210, M=18, CW=W-M*2;
+  let y=M;
+  const B800=[13,33,68],B600=[21,101,168],B300=[144,202,249],GREEN=[30,94,32],RED=[183,28,28],WHITE=[255,255,255],GRAY=[248,251,255];
+  function sf(style,size,color){doc.setFont('helvetica',style);doc.setFontSize(size);doc.setTextColor(...color);}
+  function fillRect(x,ry,w,h,color,r2){doc.setFillColor(...color);r2>0?doc.roundedRect(x,ry,w,h,r2,r2,'F'):doc.rect(x,ry,w,h,'F');}
+  function hline(x1,ry,x2){doc.setDrawColor(200,220,240);doc.setLineWidth(.3);doc.line(x1,ry,x2,ry);}
+  function chk(need){if(y+need>285){doc.addPage();y=M;drawHdr();}}
+  function drawHdr(){
+    fillRect(0,0,W,12,B800);
+    sf('bold',8,WHITE); doc.text('MicroLab — Managerial Economics',M,8);
+    sf('normal',7,B300); doc.text('Julián Díaz Tautiva, PhD · '+S.co.name+' · '+S.names,W-M,8,'right');
+    y=18;
+  }
+  /* Cover */
+  fillRect(0,0,W,58,B800);
+  sf('bold',22,WHITE); doc.text('MicroLab',M,20);
+  sf('normal',11,B300); doc.text('Simulation Report — Short-Run Costs & Supply',M,30);
+  sf('normal',8.5,[187,222,251]); doc.text('Managerial Economics  ·  Julián Díaz Tautiva, PhD',M,38);
+  sf('normal',9,[187,222,251]);
+  doc.text('Firm: '+S.co.name,M,47);
+  doc.text('Members: '+S.names,M,53);
+  const fecha=new Date().toLocaleDateString('en-US',{day:'2-digit',month:'long',year:'numeric'});
+  doc.text('Date: '+fecha,W-M,53,'right');
+  y=68;
+  /* Global */
+  const totalBen=S.results.reduce((s,r)=>s+r.b,0);
+  const avgAtt=(Object.values(S.attempts).reduce((s,v)=>s+v,0)/S.results.length).toFixed(1);
+  const avgAttN=parseFloat(avgAtt), benOk=totalBen>=0;
+  fillRect(M,y,CW,32,benOk?[232,245,233]:[255,235,238],3);
+  doc.setDrawColor(...(benOk?GREEN:RED)); doc.setLineWidth(.5); doc.roundedRect(M,y,CW,32,3,3,'S');
+  doc.setDrawColor(...(benOk?GREEN:RED)); doc.setLineWidth(1.5); doc.line(M,y,M,y+32);
+  sf('bold',11,benOk?GREEN:RED); doc.text(benOk?'Overall Result: Profitable':'Overall Result: Net Loss',M+5,y+8);
+  sf('normal',9,B800);
+  doc.text('Accumulated profit: '+fmtBen(totalBen),M+5,y+16);
+  doc.text('Average attempts per round: '+avgAtt,M+5,y+23);
+  doc.text('Rounds completed: '+S.results.length+' of '+ROUNDS.length,CW-10,y+16,'right');
+  y+=38;
+  /* Feedback */
+  chk(30); sf('bold',10,B600); doc.text('Performance Feedback',M,y); y+=5; hline(M,y,W-M); y+=4;
+  const perfMsg=avgAttN<=1.5
+    ?'Excellent performance. The group applied the maximization and shutdown conditions precisely from the first attempt.'
+    :avgAttN<=2.5
+    ?'Good performance. A few attempts were needed to adjust decisions, reflecting an active reasoning process.'
+    :'Developing performance. Review P=MC, the shutdown condition P>=AVC min, and the supply curve construction.';
+  sf('normal',9,B800);
+  const pl=doc.splitTextToSize(perfMsg,CW); doc.text(pl,M,y); y+=pl.length*5+6;
+  /* Per-round */
+  const concepts=[
+    'Concept: In a competitive market the firm maximizes profit at P = MC. The SR supply curve is the segment of MC above AVC minimum.',
+    'Concept: SR shutdown condition: operate if P >= AVC minimum (= a). If P < a, temporarily shutting down minimizes losses.',
+    'Concept: Input cost shock shifts MC and AVC upward. New shutdown threshold = a * multiplier.',
+    'Concept: SR supply curve consists of (q*,P) pairs where P = MC and P >= AVC min. It is upward-sloping.'
+  ];
+  S.results.forEach(function(res,i){
+    chk(55);
+    fillRect(M,y,CW,10,B800,2);
+    sf('bold',10,WHITE); doc.text('Round '+res.roundNum+': '+res.roundTitle,M+4,y+6.5);
+    sf('normal',8,WHITE); doc.text(fmtBen(res.b),W-M-4,y+6.5,'right');
+    y+=13;
+    const rows=[
+      ['Quantity produced (q)',res.q+' lots'],
+      ['Market price',usd(res.precio)+' USD/lot'],
+      ['Round profit',fmtBen(res.b)],
+      ['Attempts to answer',String(res.attempts)],
+      ['Note',res.nota]
+    ];
+    rows.forEach(function(row,ri){
+      if(ri%2===0) fillRect(M,y,CW,7,GRAY);
+      sf('normal',8,B600); doc.text(row[0],M+3,y+5);
+      sf('normal',8,B800); doc.text(String(row[1]),W-M-3,y+5,'right');
+      y+=7;
+    });
+    if(res.conclusion){
+      chk(20); y+=3;
+      fillRect(M,y,CW,6,B300,2);
+      sf('bold',8,B800); doc.text('Group conclusion',M+3,y+4.5); y+=8;
+      sf('italic',8,B800);
+      const cl=doc.splitTextToSize('"'+res.conclusion+'"',CW-6);
+      chk(cl.length*4.5+4); doc.text(cl,M+3,y); y+=cl.length*4.5+4;
+    }
+    chk(14); y+=2;
+    fillRect(M,y,CW,12,B300,2);
+    doc.setDrawColor(...B600); doc.setLineWidth(.4); doc.roundedRect(M,y,CW,12,2,2,'S');
+    sf('normal',7.5,B800);
+    const cl2=doc.splitTextToSize(concepts[i]||'',CW-6); doc.text(cl2,M+3,y+4.5);
+    y+=16;
+  });
+  /* Reflection */
+  chk(50);
+  fillRect(M,y,CW,8,B800,2);
+  sf('bold',10,WHITE); doc.text('Preguntas de reflexión para el plenario',M+4,y+5.5); y+=11;
+  const qs=[
+    '1. How did q* change when the price fell? Why is P = MC still valid?',
+    '2. What would happen if the price fell below your firm\'s AVC minimum?',
+    '3. How did you interpret the upward MC shift when input costs rose (Round 3)?',
+    '4. What shape does your supply curve take using Round 4\'s three points? Why is it upward-sloping?',
+    '5. How does the LR equilibrium differ from the profit-maximizing q* in the short run?'
+  ];
+  qs.forEach(function(q,i){
+    chk(12);
+    if(i%2===0) fillRect(M,y,CW,10,GRAY);
+    sf('normal',8.5,B800);
+    const ql=doc.splitTextToSize(q,CW-4); doc.text(ql,M+3,y+5); y+=10;
+  });
+  /* Footer */
+  const totalPages=doc.getNumberOfPages();
+  for(let i=1;i<=totalPages;i++){
+    doc.setPage(i);
+    fillRect(0,287,W,10,[240,246,255]);
+    sf('normal',7,B600);
+    doc.text('MicroLab — Managerial Economics · Julian Diaz Tautiva, PhD',M,293);
+    doc.text('Page '+i+' of '+totalPages,W-M,293,'right');
+  }
+  doc.save('MicroLab_Report_'+S.co.name.replace(/\s+/g,'_').toLowerCase()+'.pdf');
+}
+
+/* ── UTILS ── */
+function fmtBen(b){ const v=(b/PRICE_SCALE); return (b>=0?'+':'−')+'$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:1})+' USD'; }
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function resetGame(){
+  if(S.chartInst){ S.chartInst.destroy(); S.chartInst=null; }
+  S={co:null,names:'',round:0,results:[],attempts:{},chartInst:null,totalCells:36,locked:false};
+  document.querySelectorAll('.co-card').forEach(c=>{
+    c.classList.remove('selected','locked','locked-selected');
+  });
+  document.getElementById('lock-notice').classList.remove('show');
+  document.getElementById('btn-start').disabled=true;
+  document.getElementById('names-wrap').style.display='none';
+  document.getElementById('params-panel').classList.remove('show');
+  const list=document.getElementById('members-list');
+  list.innerHTML=[1,2,3].map(n=>
+    '<div class="member-row"><span class="member-num">'+n+'</span>'+
+    '<input type="text" class="member-input" placeholder="Nombre y apellido — Integrante '+n+'"></div>'
+  ).join('');
+  show('screen-intro');
+}
+
+function toggleGlossary(el){
+  el.classList.toggle('open');
+  const body=el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+</script>
+</body>
+</html>
