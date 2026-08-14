@@ -54,4 +54,4 @@ By completing the simulation, students are able to:
 ---
 ## Suggested Citation
 
-Díaz Tautiva, J.A. (2026). *MicroLab — Economics Decision Simulator*. Managerial Economics teaching simulator.
+Díaz Tautiva, J. A. (2026). MicroLab 1 — Economics decision simulator [Interactive teaching simulator]. https://jdtautiva.github.io/MicroLab1/
